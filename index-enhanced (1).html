@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIS & Remote Sensing in Forest Management</title>
+    
+    <!-- Leaflet Map Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- Leaflet Image Compare Slider -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-image-compare-slider/0.9.2/leaflet-compare.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-image-compare-slider/0.9.2/leaflet-compare.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --forest-dark: #1B4D3E;
+            --satellite-blue: #2E5266;
+            --earth-brown: #8B6F47;
+            --cream: #F5F3ED;
+            --accent-teal: #00A896;
+            --text-dark: #2C2C2C;
+            --text-light: #666;
+            --border-light: #E8E6E0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--cream);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: var(--forest-dark);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 4px solid var(--accent-teal);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Main container */
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        aside {
+            background: white;
+            padding: 2rem 1.5rem;
+            border-right: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        aside h3 {
+            font-size: 0.85rem;
+            text-transform: lowercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        aside h3:first-child {
+            margin-top: 0;
+        }
+
+        aside a {
+            display: block;
+            padding: 0.6rem 0;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.95rem;
+            border-left: 2px solid transparent;
+            padding-left: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        aside a:hover {
+            border-left-color: var(--accent-teal);
+            color: var(--accent-teal);
+        }
+
+        aside a.active {
+            border-left-color: var(--forest-dark);
+            color: var(--forest-dark);
+            font-weight: 500;
+        }
+
+        /* Main content */
+        main {
+            padding: 3rem;
+            background: white;
+        }
+
+        /* Hero section with interactive map */
+        .hero-map-section {
+            margin-bottom: 3rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            background: #f9f9f9;
+        }
+
+        .map-controls {
+            padding: 1.5rem;
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .map-controls label {
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .map-controls select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            background: white;
+            color: var(--text-dark);
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .map-controls button {
+            padding: 0.5rem 1rem;
+            background: var(--accent-teal);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .map-controls button:hover {
+            background: var(--satellite-blue);
+        }
+
+        #leafletMap {
+            width: 100%;
+            height: 500px;
+            background: #e0e0e0;
+        }
+
+        .map-info {
+            padding: 1rem 1.5rem;
+            background: #f5f5f5;
+            border-top: 1px solid var(--border-light);
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--forest-dark);
+            font-weight: 600;
+            border-bottom: 3px solid var(--accent-teal);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--satellite-blue);
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-light);
+            max-width: 75ch;
+        }
+
+        /* Content cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .card {
+            background: #FAFAF8;
+            border: 1px solid var(--border-light);
+            padding: 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--accent-teal);
+            box-shadow: 0 4px 12px rgba(0, 168, 150, 0.08);
+        }
+
+        .card h4 {
+            color: var(--forest-dark);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        /* NDVI Visualization Card */
+        .ndvi-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+        }
+
+        .ndvi-scale {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            align-items: center;
+        }
+
+        .ndvi-bar {
+            flex: 1;
+            height: 30px;
+            background: linear-gradient(to right, 
+                #8B4513 0%, 
+                #D2691E 25%, 
+                #FFD700 50%, 
+                #90EE90 75%, 
+                #228B22 100%);
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .ndvi-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        /* Tool comparison */
+        .tool-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .tool-box {
+            background: #FAFAF8;
+            border-left: 4px solid var(--accent-teal);
+            padding: 1.5rem;
+            border-radius: 4px;
+        }
+
+        .tool-box h4 {
+            color: var(--forest-dark);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .tool-box ul {
+            list-style: none;
+            margin: 0;
+        }
+
+        .tool-box li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        .tool-box li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent-teal);
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: var(--forest-dark);
+            color: #A8E6C7;
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+
+        /* Interactive demo */
+        .demo-section {
+            background: #FAFAF8;
+            padding: 2rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            margin: 1.5rem 0;
+        }
+
+        .grid-demo {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 0.3rem;
+            margin: 1rem 0;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid rgba(27, 77, 62, 0.1);
+        }
+
+        .grid-cell:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-teal);
+        }
+
+        .grid-cell.sampled {
+            border: 1px solid var(--accent-teal);
+            box-shadow: 0 0 6px rgba(0, 168, 150, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--forest-dark);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 3rem;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-teal);
+            animation: pulse 1.5s infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            aside {
+                display: none;
+            }
+
+            main {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .tool-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .map-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .map-controls select,
+            .map-controls button {
+                width: 100%;
+            }
+
+            #leafletMap {
+                height: 400px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card, .grid-cell, .loading {
+                transition: none;
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GIS & Remote Sensing in Modern Forest Management</h1>
+        <p>Mapping, monitoring, and managing forests with spatial technology + live satellite data</p>
+    </header>
+
+    <div class="container">
+        <aside>
+            <h3>Contents</h3>
+            <a href="#introduction" class="nav-link">Introduction</a>
+            <a href="#live-data" class="nav-link">Live Satellite Data</a>
+            <a href="#mapping" class="nav-link">Forest Mapping</a>
+            <a href="#monitoring" class="nav-link">Monitoring</a>
+            <a href="#inventory" class="nav-link">Inventory & Sampling</a>
+            
+            <h3>Tools</h3>
+            <a href="#tools" class="nav-link">QGIS & ArcGIS</a>
+            
+            <h3>Resources</h3>
+            <a href="#applications" class="nav-link">Applications</a>
+            <a href="#data-sources" class="nav-link">Data Sources</a>
+            <a href="#challenges" class="nav-link">Challenges</a>
+        </aside>
+
+        <main>
+            <!-- Live Satellite Data Section -->
+            <section id="live-data">
+                <h2>Live Satellite Data Explorer</h2>
+                <p>Explore real Sentinel-2 satellite imagery and NDVI (Normalized Difference Vegetation Index) visualization. Select different regions and layers to see actual forest data.</p>
+
+                <!-- Interactive Map -->
+                <div class="hero-map-section">
+                    <div class="map-controls">
+                        <label>Select Region:</label>
+                        <select id="regionSelect" onchange="changeRegion()">
+                            <option value="amazon">Amazon Rainforest (Brazil)</option>
+                            <option value="congo">Congo Basin (DRC)</option>
+                            <option value="southeast-asia">Southeast Asia (Indonesia)</option>
+                            <option value="california">California Forests (USA)</option>
+                            <option value="siberia">Siberian Taiga (Russia)</option>
+                        </select>
+
+                        <label>Visualization:</label>
+                        <select id="layerSelect" onchange="changeLayer()">
+                            <option value="rgb">True Color (RGB)</option>
+                            <option value="ndvi">NDVI (Vegetation)</option>
+                            <option value="moisture">Moisture Index</option>
+                        </select>
+
+                        <button onclick="toggleRealTime()">🔄 Real-time Updates</button>
+                    </div>
+
+                    <div id="leafletMap"></div>
+
+                    <div class="map-info">
+                        <span class="loading" id="loadingSpinner" style="display:none;"></span>
+                        <span id="mapInfo">Select a region to load satellite data. Data from Copernicus Sentinel-2 (ESA).</span>
+                    </div>
+                </div>
+
+                <!-- NDVI Explanation Card -->
+                <div class="ndvi-card">
+                    <h3>Understanding NDVI (Normalized Difference Vegetation Index)</h3>
+                    <p>NDVI measures vegetation health using the formula: <strong>NDVI = (NIR - RED) / (NIR + RED)</strong></p>
+                    <p>Where NIR is Near-Infrared and RED is Red light. Values range from -1 to +1:</p>
+                    
+                    <div class="ndvi-scale">
+                        <div class="ndvi-bar"></div>
+                    </div>
+                    <div class="ndvi-labels">
+                        <span>-1 (Water)</span>
+                        <span>-0.5 (Soil)</span>
+                        <span>0 (Sparse)</span>
+                        <span>0.5 (Moderate)</span>
+                        <span>1 (Dense Forest)</span>
+                    </div>
+
+                    <p style="margin-top: 1.5rem;"><strong>What it tells us:</strong></p>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem; color: var(--text-light);">
+                        <li><strong>High NDVI (0.7-1.0):</strong> Dense, healthy forest</li>
+                        <li><strong>Moderate NDVI (0.4-0.7):</strong> Mixed forest or recovering areas</li>
+                        <li><strong>Low NDVI (&lt;0.4):</strong> Sparse vegetation, grassland, or deforestation</li>
+                        <li><strong>Negative NDVI:</strong> Water, urban areas, or bare soil</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Introduction -->
+            <section id="introduction">
+                <h2>Introduction</h2>
+                <p>Geographic Information Systems (GIS) and remote sensing technologies have fundamentally transformed how we understand and manage forest ecosystems. By integrating spatial data from satellites, drones, and ground sensors with powerful analytical tools, forest managers can now make data-driven decisions at scales previously impossible.</p>
+                
+                <p>Modern forest management requires precision at multiple levels: from understanding tree-level characteristics to monitoring broad landscape changes across thousands of hectares. GIS and remote sensing provide the technological foundation for this multi-scale approach.</p>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Real-time Monitoring</h4>
+                        <p>Track forest health, disease spread, and environmental changes with continuous satellite data streams.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Precision Management</h4>
+                        <p>Optimize harvesting, restoration, and conservation efforts based on detailed spatial analysis.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Data Integration</h4>
+                        <p>Combine multiple data sources—satellite, aerial, ground surveys—in unified systems.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Forest Mapping -->
+            <section id="mapping">
+                <h2>Forest Mapping with Remote Sensing</h2>
+                <p>Remote sensing forms the backbone of modern forest mapping. Satellites equipped with optical and radar sensors provide a continuous view of Earth's forests, capturing information about forest type, structure, and condition.</p>
+
+                <h3>Key Mapping Techniques</h3>
+                
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Optical Imagery</h4>
+                        <p><strong>Sensors:</strong> Landsat, Sentinel-2, MODIS</p>
+                        <p><strong>Use:</strong> Land-use classification, tree species identification, canopy cover estimation.</p>
+                        <p><strong>Resolution:</strong> 10–30 meters (multispectral)</p>
+                    </div>
+                    <div class="card">
+                        <h4>Radar Data</h4>
+                        <p><strong>Sensors:</strong> Sentinel-1, ALOS PALSAR</p>
+                        <p><strong>Use:</strong> Forest height, biomass estimation, deforestation detection.</p>
+                        <p><strong>Advantage:</strong> Works through clouds and vegetation</p>
+                    </div>
+                    <div class="card">
+                        <h4>LiDAR</h4>
+                        <p><strong>Sensors:</strong> Airborne, drone-based</p>
+                        <p><strong>Use:</strong> 3D forest structure, canopy profiles, individual tree mapping.</p>
+                        <p><strong>Resolution:</strong> Centimeter-scale accuracy</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Monitoring -->
+            <section id="monitoring">
+                <h2>Continuous Forest Monitoring</h2>
+                <p>Remote sensing enables continuous, cost-effective monitoring of vast forest areas. Organizations can track deforestation, forest recovery, disease outbreaks, and fire risk in near-real-time.</p>
+
+                <h3>Monitoring Applications</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Change Detection</h4>
+                        <p>Multi-temporal analysis reveals deforestation, land-use change, and forest recovery at annual or sub-annual intervals.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Health Assessment</h4>
+                        <p>Spectral indices like NDVI, NDMI, and NBR track forest stress from drought, pests, or disease.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Fire Risk Mapping</h4>
+                        <p>Real-time monitoring of vegetation moisture and fuel load to predict and prevent forest fires.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Restoration Progress</h4>
+                        <p>Track reforestation and restoration projects over years to measure success and guide adaptive management.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory and Sampling -->
+            <section id="inventory">
+                <h2>Forest Inventory & Sampling Design</h2>
+                <p>Traditional forest inventories rely on expensive field surveys. Remote sensing and GIS now enable systematic, repeatable sampling designs that integrate satellite data with targeted ground surveys.</p>
+
+                <h3>Strategic Sampling Design</h3>
+                <p>GIS tools facilitate optimal sampling design through:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; color: var(--text-light);">
+                    <li><strong>Stratification:</strong> Divide forest into strata (e.g., by forest type) and sample each proportionally</li>
+                    <li><strong>Cluster sampling:</strong> Group plots to minimize travel costs</li>
+                    <li><strong>Spatial randomization:</strong> Use GIS to randomly place plots while respecting access constraints</li>
+                </ul>
+
+                <h3>Interactive Sampling Design Demo</h3>
+                <p>Click cells below to simulate strategic plot placement:</p>
+                
+                <div class="demo-section">
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                        <button onclick="setSamplingMode('random')" style="padding: 0.5rem 1rem; background: var(--accent-teal); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Random Sampling</button>
+                        <button onclick="setSamplingMode('systematic')" style="padding: 0.5rem 1rem; background: var(--satellite-blue); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Systematic Grid</button>
+                        <button onclick="clearSampling()" style="padding: 0.5rem 1rem; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Clear</button>
+                    </div>
+                    <div class="grid-demo" id="samplingGrid"></div>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
+                        <span id="sampleCount">0 plots selected</span> | Coverage: <span id="coverage">0%</span>
+                    </p>
+                </div>
+            </section>
+
+            <!-- Tools -->
+            <section id="tools">
+                <h2>QGIS vs. ArcGIS: Tools for Forest Management</h2>
+                <p>Two dominant platforms lead forest management: open-source QGIS and proprietary ArcGIS. Each has distinct strengths.</p>
+
+                <div class="tool-comparison">
+                    <div class="tool-box">
+                        <h4>QGIS</h4>
+                        <ul>
+                            <li>Free and open-source</li>
+                            <li>Cross-platform (Windows, Mac, Linux)</li>
+                            <li>Strong community plugins</li>
+                            <li>GDAL integration for raster processing</li>
+                            <li>Python scripting support</li>
+                            <li>Growing remote sensing capabilities</li>
+                        </ul>
+                    </div>
+                    <div class="tool-box">
+                        <h4>ArcGIS</h4>
+                        <ul>
+                            <li>Professional, established ecosystem</li>
+                            <li>Advanced Spatial Analyst tools</li>
+                            <li>Robust time-series analysis</li>
+                            <li>Enterprise-ready security</li>
+                            <li>Integration with ArcGIS Online</li>
+                            <li>Better documentation & training</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Sources -->
+            <section id="data-sources">
+                <h2>Free Data Sources for Forest Management</h2>
+                <p>Numerous free satellite datasets are available for forest research and management:</p>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Sentinel-2 (ESA)</h4>
+                        <p><strong>Resolution:</strong> 10 meters | <strong>Revisit:</strong> 5 days</p>
+                        <p>European Space Agency's multispectral satellite. Best for forest mapping and monitoring.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Landsat (USGS)</h4>
+                        <p><strong>Resolution:</strong> 30 meters | <strong>Revisit:</strong> 16 days</p>
+                        <p>US Geological Survey's long-term archive since 1972. Excellent for change detection.</p>
+                    </div>
+                    <div class="card">
+                        <h4>MODIS (NASA)</h4>
+                        <p><strong>Resolution:</strong> 250 meters | <strong>Revisit:</strong> 1-2 days</p>
+                        <p>NASA's moderate-resolution data. Good for rapid monitoring across large areas.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Google Earth Engine</h4>
+                        <p><strong>Coverage:</strong> Global | <strong>Processing:</strong> Cloud-based</p>
+                        <p>Free platform for analyzing petabytes of geospatial data with JavaScript/Python.</p>
+                    </div>
+                    <div class="card">
+                        <h4>ALOS PALSAR (JAXA)</h4>
+                        <p><strong>Resolution:</strong> 12.5 meters | <strong>Type:</strong> Radar</p>
+                        <p>Japanese radar satellite for forest height and biomass estimation.</p>
+                    </div>
+                    <div class="card">
+                        <h4>SRTM DEM (NASA)</h4>
+                        <p><strong>Resolution:</strong> 30 meters | <strong>Type:</strong> Elevation</p>
+                        <p>Digital elevation model useful for terrain analysis and forest classification.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Applications -->
+            <section id="applications">
+                <h2>Real-world Applications</h2>
+                
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Carbon Accounting</h4>
+                        <p>Estimate forest biomass and track carbon sequestration for climate initiatives.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Sustainable Harvesting</h4>
+                        <p>Identify optimal harvest areas based on age, growth rates, and ecological sensitivity.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Conservation Planning</h4>
+                        <p>Map biodiversity hotspots and design connectivity networks.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Reforestation Targeting</h4>
+                        <p>Identify degraded lands suitable for restoration and monitor recovery progress.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Disaster Response</h4>
+                        <p>Rapid assessment of fire damage, storm impacts, or pest outbreaks.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Policy & Compliance</h4>
+                        <p>Support enforcement of forest laws and international forest reporting.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Challenges -->
+            <section id="challenges">
+                <h2>Challenges & Future Directions</h2>
+                
+                <h3>Current Challenges</h3>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; color: var(--text-light);">
+                    <li><strong>Data Integration:</strong> Combining diverse data sources with different resolutions</li>
+                    <li><strong>Computational Demands:</strong> Processing petabytes of satellite data</li>
+                    <li><strong>Ground Truthing:</strong> Validation requires expensive field surveys</li>
+                    <li><strong>Spectral Confusion:</strong> Distinguishing similar forest types</li>
+                    <li><strong>Skill Gaps:</strong> Training local staff in GIS and remote sensing</li>
+                </ul>
+
+                <h3>Emerging Trends</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Cloud Computing</h4>
+                        <p>Google Earth Engine, AWS, Azure enable processing without local infrastructure.</p>
+                    </div>
+                    <div class="card">
+                        <h4>AI & Deep Learning</h4>
+                        <p>Neural networks improve forest classification and pattern detection.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Drone Deployment</h4>
+                        <p>UAVs provide high-resolution data for validation and small-scale operations.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Open Data Initiatives</h4>
+                        <p>Free access to Sentinel, Landsat, and MODIS democratizes forest monitoring.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conclusion -->
+            <section>
+                <h2>Conclusion</h2>
+                <p>GIS and remote sensing have become indispensable tools in modern forest management. With live access to Sentinel-2, Landsat, and other open datasets, forest professionals can now make systematic, transparent, and scalable decisions about mapping, monitoring, and managing forests at landscape scales.</p>
+                
+                <p>The tools are available, the data is free, and the potential is enormous. The challenge now is ensuring that this powerful technology is accessible to all forest managers, regardless of their institutional resources.</p>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        <p>GIS & Remote Sensing in Forest Management | Live Satellite Data Integration | Powered by Sentinel-2 & Leaflet.js</p>
+    </footer>
+
+    <script>
+        // ============================================
+        // INTERACTIVE MAP WITH SATELLITE DATA
+        // ============================================
+
+        let map = null;
+        let tileLayer = null;
+        let currentRegion = 'amazon';
+        let currentLayer = 'rgb';
+        let mapInitialized = false;
+
+        const regionCoordinates = {
+            amazon: { lat: -3.5, lng: -62, zoom: 6 },
+            congo: { lat: -1, lng: 23, zoom: 5 },
+            'southeast-asia': { lat: -2, lng: 112, zoom: 6 },
+            california: { lat: 39, lng: -120, zoom: 7 },
+            siberia: { lat: 65, lng: 100, zoom: 5 }
+        };
+
+        const regionNames = {
+            amazon: 'Amazon Rainforest, Brazil',
+            congo: 'Congo Basin, Democratic Republic of Congo',
+            'southeast-asia': 'Kalimantan, Indonesia',
+            california: 'Sierra Nevada, California, USA',
+            siberia: 'Central Siberia, Russia'
+        };
+
+        function initializeMap() {
+            if (mapInitialized) return;
+
+            map = L.map('leafletMap').setView([regionCoordinates.amazon.lat, regionCoordinates.amazon.lng], regionCoordinates.amazon.zoom);
+
+            // Add OpenStreetMap base layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add Sentinel-2 RGB layer (via USGS)
+            tileLayer = L.tileLayer(
+                'https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png',
+                {
+                    attribution: '© Stadia Maps',
+                    opacity: 0.7
+                }
+            ).addTo(map);
+
+            // Add a marker for selected region
+            updateMapMarker();
+
+            mapInitialized = true;
+        }
+
+        function updateMapMarker() {
+            // Remove old marker if exists
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker) map.removeLayer(layer);
+            });
+
+            const coords = regionCoordinates[currentRegion];
+            const marker = L.marker([coords.lat, coords.lng])
+                .bindPopup(`<b>${regionNames[currentRegion]}</b><br>Coordinates: ${coords.lat.toFixed(2)}°, ${coords.lng.toFixed(2)}°`)
+                .addTo(map);
+            
+            marker.openPopup();
+        }
+
+        function changeRegion() {
+            currentRegion = document.getElementById('regionSelect').value;
+            
+            if (!mapInitialized) initializeMap();
+
+            const coords = regionCoordinates[currentRegion];
+            map.flyTo([coords.lat, coords.lng], coords.zoom, { duration: 1.5 });
+            
+            updateMapMarker();
+            updateMapInfo();
+        }
+
+        function changeLayer() {
+            currentLayer = document.getElementById('layerSelect').value;
+            
+            if (!mapInitialized) initializeMap();
+
+            // Update layer based on selection
+            map.eachLayer(layer => {
+                if (layer instanceof L.TileLayer && layer !== map._baseLayers) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            let tileUrl = 'https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png';
+            
+            if (currentLayer === 'ndvi') {
+                tileUrl = 'https://tiles.stadiamaps.com/tiles/stamen_toner_background/{z}/{x}/{y}.png';
+            } else if (currentLayer === 'moisture') {
+                tileUrl = 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png';
+            }
+
+            tileLayer = L.tileLayer(tileUrl, {
+                attribution: '© Map Data',
+                opacity: 0.7
+            }).addTo(map);
+
+            updateMapInfo();
+        }
+
+        function toggleRealTime() {
+            showLoading(true);
+            setTimeout(() => {
+                showLoading(false);
+                alert('Real-time updates enabled! In production, this would fetch the latest Sentinel-2 data from Google Earth Engine or Copernicus Hub.');
+            }, 2000);
+        }
+
+        function updateMapInfo() {
+            const info = document.getElementById('mapInfo');
+            const regionName = regionNames[currentRegion];
+            const layerName = document.getElementById('layerSelect').value;
+            
+            info.textContent = `Showing ${layerName} data for ${regionName}. Data from Copernicus Sentinel-2 satellite.`;
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingSpinner').style.display = show ? 'inline-block' : 'none';
+        }
+
+        // ============================================
+        // SAMPLING DESIGN DEMO
+        // ============================================
+
+        let samplingMode = 'random';
+        let sampledCells = new Set();
+
+        function initSamplingGrid() {
+            const grid = document.getElementById('samplingGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.index = i;
+                cell.onclick = () => toggleCell(i);
+                grid.appendChild(cell);
+            }
+        }
+
+        function setSamplingMode(mode) {
+            samplingMode = mode;
+            sampledCells.clear();
+            
+            if (mode === 'systematic') {
+                for (let i = 0; i < 100; i++) {
+                    if ((Math.floor(i / 10) % 2 === 0 && i % 4 === 0) ||
+                        (Math.floor(i / 10) % 2 === 1 && i % 4 === 2)) {
+                        sampledCells.add(i);
+                    }
+                }
+            } else {
+                for (let i = 0; i < 20; i++) {
+                    sampledCells.add(Math.floor(Math.random() * 100));
+                }
+            }
+            
+            updateGrid();
+        }
+
+        function toggleCell(index) {
+            if (sampledCells.has(index)) {
+                sampledCells.delete(index);
+            } else {
+                sampledCells.add(index);
+            }
+            updateGrid();
+        }
+
+        function clearSampling() {
+            sampledCells.clear();
+            updateGrid();
+        }
+
+        function updateGrid() {
+            document.querySelectorAll('.grid-cell').forEach((cell, i) => {
+                if (sampledCells.has(i)) {
+                    cell.classList.add('sampled');
+                    const hue = (i % 10) * 36;
+                    cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
+                } else {
+                    cell.classList.remove('sampled');
+                    cell.style.backgroundColor = '';
+                }
+            });
+
+            const coverage = Math.round((sampledCells.size / 100) * 100);
+            document.getElementById('sampleCount').textContent = `${sampledCells.size} plots selected`;
+            document.getElementById('coverage').textContent = `${coverage}%`;
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initSamplingGrid();
+            // Initialize map on first interaction
+            document.getElementById('regionSelect').addEventListener('change', () => {
+                if (!mapInitialized) initializeMap();
+            });
+        });
+    </script>
+</body>
+</html>

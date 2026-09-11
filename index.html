@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIS & Remote Sensing in Forest Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --forest-dark: #1B4D3E;
+            --satellite-blue: #2E5266;
+            --earth-brown: #8B6F47;
+            --cream: #F5F3ED;
+            --accent-teal: #00A896;
+            --text-dark: #2C2C2C;
+            --text-light: #666;
+            --border-light: #E8E6E0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--cream);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: var(--forest-dark);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 4px solid var(--accent-teal);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Main container */
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        aside {
+            background: white;
+            padding: 2rem 1.5rem;
+            border-right: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        aside h3 {
+            font-size: 0.85rem;
+            text-transform: lowercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        aside h3:first-child {
+            margin-top: 0;
+        }
+
+        aside a {
+            display: block;
+            padding: 0.6rem 0;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.95rem;
+            border-left: 2px solid transparent;
+            padding-left: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        aside a:hover {
+            border-left-color: var(--accent-teal);
+            color: var(--accent-teal);
+        }
+
+        aside a.active {
+            border-left-color: var(--forest-dark);
+            color: var(--forest-dark);
+            font-weight: 500;
+        }
+
+        /* Main content */
+        main {
+            padding: 3rem;
+            background: white;
+        }
+
+        /* Hero section with visualization */
+        .hero-visual {
+            margin-bottom: 3rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+        }
+
+        .hero-visual canvas {
+            display: block;
+            width: 100%;
+            max-height: 400px;
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--forest-dark);
+            font-weight: 600;
+            border-bottom: 3px solid var(--accent-teal);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--satellite-blue);
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-light);
+            max-width: 75ch;
+        }
+
+        /* Content cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .card {
+            background: #FAFAF8;
+            border: 1px solid var(--border-light);
+            padding: 1.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--accent-teal);
+            box-shadow: 0 4px 12px rgba(0, 168, 150, 0.08);
+        }
+
+        .card h4 {
+            color: var(--forest-dark);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        /* Tool comparison */
+        .tool-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .tool-box {
+            background: #FAFAF8;
+            border-left: 4px solid var(--accent-teal);
+            padding: 1.5rem;
+            border-radius: 4px;
+        }
+
+        .tool-box h4 {
+            color: var(--forest-dark);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .tool-box ul {
+            list-style: none;
+            margin: 0;
+        }
+
+        .tool-box li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        .tool-box li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: var(--accent-teal);
+        }
+
+        /* Interactive demo */
+        .demo-section {
+            background: #FAFAF8;
+            padding: 2rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            margin: 1.5rem 0;
+        }
+
+        .demo-section h4 {
+            color: var(--forest-dark);
+            margin-bottom: 1rem;
+        }
+
+        .grid-demo {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 0.3rem;
+            margin: 1rem 0;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid rgba(27, 77, 62, 0.1);
+        }
+
+        .grid-cell:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-teal);
+        }
+
+        .grid-cell.sampled {
+            border: 1px solid var(--accent-teal);
+            box-shadow: 0 0 6px rgba(0, 168, 150, 0.3);
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: var(--forest-dark);
+            color: #A8E6C7;
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--forest-dark);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            aside {
+                display: none;
+            }
+
+            main {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .tool-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-demo {
+                grid-template-columns: repeat(8, 1fr);
+            }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .card, .grid-cell {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GIS & Remote Sensing in Modern Forest Management</h1>
+        <p>Mapping, monitoring, and managing forests with spatial technology</p>
+    </header>
+
+    <div class="container">
+        <aside>
+            <h3>Contents</h3>
+            <a href="#introduction" class="nav-link">Introduction</a>
+            <a href="#mapping" class="nav-link">Forest Mapping</a>
+            <a href="#monitoring" class="nav-link">Monitoring</a>
+            <a href="#inventory" class="nav-link">Inventory & Sampling</a>
+            
+            <h3>Tools</h3>
+            <a href="#tools" class="nav-link">QGIS & ArcGIS</a>
+            
+            <h3>Resources</h3>
+            <a href="#applications" class="nav-link">Applications</a>
+            <a href="#challenges" class="nav-link">Challenges</a>
+        </aside>
+
+        <main>
+            <!-- Hero visualization -->
+            <div class="hero-visual">
+                <canvas id="forestMap"></canvas>
+            </div>
+
+            <!-- Introduction -->
+            <section id="introduction">
+                <h2>Introduction</h2>
+                <p>Geographic Information Systems (GIS) and remote sensing technologies have fundamentally transformed how we understand and manage forest ecosystems. By integrating spatial data from satellites, drones, and ground sensors with powerful analytical tools, forest managers can now make data-driven decisions at scales previously impossible.</p>
+                
+                <p>Modern forest management requires precision at multiple levels: from understanding tree-level characteristics to monitoring broad landscape changes across thousands of hectares. GIS and remote sensing provide the technological foundation for this multi-scale approach.</p>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Real-time Monitoring</h4>
+                        <p>Track forest health, disease spread, and environmental changes with continuous satellite data streams.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Precision Management</h4>
+                        <p>Optimize harvesting, restoration, and conservation efforts based on detailed spatial analysis.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Data Integration</h4>
+                        <p>Combine multiple data sources—satellite, aerial, ground surveys—in unified systems.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Forest Mapping -->
+            <section id="mapping">
+                <h2>Forest Mapping with Remote Sensing</h2>
+                <p>Remote sensing forms the backbone of modern forest mapping. Satellites equipped with optical and radar sensors provide a continuous view of Earth's forests, capturing information about forest type, structure, and condition.</p>
+
+                <h3>Key Mapping Techniques</h3>
+                
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Optical Imagery</h4>
+                        <p><strong>Sensors:</strong> Landsat, Sentinel-2, MODIS</p>
+                        <p><strong>Use:</strong> Land-use classification, tree species identification, canopy cover estimation.</p>
+                        <p><strong>Resolution:</strong> 10–30 meters (multispectral)</p>
+                    </div>
+                    <div class="card">
+                        <h4>Radar Data</h4>
+                        <p><strong>Sensors:</strong> Sentinel-1, ALOS PALSAR</p>
+                        <p><strong>Use:</strong> Forest height, biomass estimation, deforestation detection.</p>
+                        <p><strong>Advantage:</strong> Works through clouds and vegetation</p>
+                    </div>
+                    <div class="card">
+                        <h4>LiDAR</h4>
+                        <p><strong>Sensors:</strong> Airborne, drone-based</p>
+                        <p><strong>Use:</strong> 3D forest structure, canopy profiles, individual tree mapping.</p>
+                        <p><strong>Resolution:</strong> Centimeter-scale accuracy</p>
+                    </div>
+                </div>
+
+                <h3>Classification Workflow in QGIS</h3>
+                <p>A typical forest mapping workflow using QGIS involves:</p>
+                <ol style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Load satellite imagery (e.g., Sentinel-2)</li>
+                    <li>Apply radiometric correction</li>
+                    <li>Calculate spectral indices (NDVI, NDMI)</li>
+                    <li>Train classifier on ground truth data</li>
+                    <li>Generate forest type/cover maps</li>
+                    <li>Validate accuracy and export results</li>
+                </ol>
+
+                <div class="code-block">
+# NDVI Calculation (vegetation index)
+NDVI = (NIR - RED) / (NIR + RED)
+
+# Forest classification threshold
+if NDVI > 0.6: Dense Forest
+if NDVI 0.4-0.6: Moderate Forest
+if NDVI &lt; 0.4: Sparse/Non-forest
+                </div>
+            </section>
+
+            <!-- Monitoring -->
+            <section id="monitoring">
+                <h2>Continuous Forest Monitoring</h2>
+                <p>Remote sensing enables continuous, cost-effective monitoring of vast forest areas. Organizations can track deforestation, forest recovery, disease outbreaks, and fire risk in near-real-time.</p>
+
+                <h3>Monitoring Applications</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Change Detection</h4>
+                        <p>Multi-temporal analysis reveals deforestation, land-use change, and forest recovery at annual or sub-annual intervals.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Health Assessment</h4>
+                        <p>Spectral indices like NDVI, NDMI, and NBR track forest stress from drought, pests, or disease.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Fire Risk Mapping</h4>
+                        <p>Real-time monitoring of vegetation moisture and fuel load to predict and prevent forest fires.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Restoration Progress</h4>
+                        <p>Track reforestation and restoration projects over years to measure success and guide adaptive management.</p>
+                    </div>
+                </div>
+
+                <h3>Time-series Analysis</h3>
+                <p>ArcGIS Spatial Analyst tools enable time-series analysis across multiple satellite images. Stacking Sentinel-2 images from multiple years allows forest managers to:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; color: var(--text-light);">
+                    <li>Calculate annual forest loss rates</li>
+                    <li>Model disturbance frequency and recovery</li>
+                    <li>Forecast future forest conditions</li>
+                </ul>
+            </section>
+
+            <!-- Inventory and Sampling -->
+            <section id="inventory">
+                <h2>Forest Inventory & Sampling Design</h2>
+                <p>Traditional forest inventories rely on expensive field surveys. Remote sensing and GIS now enable systematic, repeatable sampling designs that integrate satellite data with targeted ground surveys.</p>
+
+                <h3>Strategic Sampling Design</h3>
+                <p>GIS tools facilitate optimal sampling design through:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; color: var(--text-light);">
+                    <li><strong>Stratification:</strong> Divide forest into strata (e.g., by forest type) and sample each proportionally</li>
+                    <li><strong>Cluster sampling:</strong> Group plots to minimize travel costs</li>
+                    <li><strong>Spatial randomization:</strong> Use GIS to randomly place plots while respecting access constraints</li>
+                </ul>
+
+                <h3>Interactive Sampling Design Demo</h3>
+                <p>Click cells below to simulate strategic plot placement in a forest area (systematic grid vs. random sampling):</p>
+                
+                <div class="demo-section">
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                        <button onclick="setSamplingMode('random')" style="padding: 0.5rem 1rem; background: var(--accent-teal); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Random Sampling</button>
+                        <button onclick="setSamplingMode('systematic')" style="padding: 0.5rem 1rem; background: var(--satellite-blue); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Systematic Grid</button>
+                        <button onclick="clearSampling()" style="padding: 0.5rem 1rem; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Clear</button>
+                    </div>
+                    <div class="grid-demo" id="samplingGrid"></div>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
+                        <span id="sampleCount">0 plots selected</span> | Coverage: <span id="coverage">0%</span>
+                    </p>
+                </div>
+
+                <h3>Allometric Equations & Biomass Estimation</h3>
+                <p>Once sample plots are established, managers use allometric equations in GIS to estimate forest biomass and carbon stock:</p>
+                
+                <div class="code-block">
+# Allometric equation for tropical trees
+Aboveground Biomass (kg) = a × (DBH)^b
+
+# Example: 
+# a = 0.0673, b = 2.596 (for mixed tropical forests)
+AGB = 0.0673 × (DBH in cm)^2.596
+
+# Scale to hectare level using plot radius
+# AGB per hectare = sum(individual AGB) / plot area
+                </div>
+            </section>
+
+            <!-- Tools Comparison -->
+            <section id="tools">
+                <h2>QGIS vs. ArcGIS: Tools for Forest Management</h2>
+                <p>Two dominant platforms dominate forest management: open-source QGIS and proprietary ArcGIS. Each has distinct strengths.</p>
+
+                <div class="tool-comparison">
+                    <div class="tool-box">
+                        <h4>QGIS</h4>
+                        <ul>
+                            <li>Free and open-source</li>
+                            <li>Cross-platform (Windows, Mac, Linux)</li>
+                            <li>Strong community plugins</li>
+                            <li>GDAL integration for raster processing</li>
+                            <li>Python scripting support</li>
+                            <li>Growing remote sensing capabilities</li>
+                            <li>No licensing barriers</li>
+                        </ul>
+                    </div>
+                    <div class="tool-box">
+                        <h4>ArcGIS</h4>
+                        <ul>
+                            <li>Professional, established ecosystem</li>
+                            <li>Advanced Spatial Analyst tools</li>
+                            <li>Robust time-series analysis</li>
+                            <li>Enterprise-ready security</li>
+                            <li>Extensive training & documentation</li>
+                            <li>Integration with ArcGIS Online</li>
+                            <li>Higher licensing costs</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Workflow Examples</h3>
+                <p><strong>Deforestation Mapping in QGIS:</strong> Load two Sentinel-2 images from different years → Calculate NDVI for both → Reclassify as forest/non-forest → Compute difference layer → Export change map.</p>
+
+                <p><strong>Biomass Estimation in ArcGIS:</strong> Integrate LiDAR-derived canopy height with field plot measurements → Train regression model → Apply spatially across study area → Generate biomass surface.</p>
+            </section>
+
+            <!-- Applications -->
+            <section id="applications">
+                <h2>Real-world Applications</h2>
+                
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Carbon Accounting</h4>
+                        <p>Estimate forest biomass and track carbon sequestration for climate initiatives and carbon credit programs.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Sustainable Harvesting</h4>
+                        <p>Identify optimal harvest areas based on age, growth rates, and ecological sensitivity mapped in GIS.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Conservation Planning</h4>
+                        <p>Map biodiversity hotspots, prioritize protection areas, and design connectivity networks.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Reforestation Targeting</h4>
+                        <p>Identify degraded lands suitable for restoration and monitor recovery progress.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Disaster Response</h4>
+                        <p>Rapid assessment of fire damage, storm impacts, or pest outbreaks to guide emergency response.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Policy & Compliance</h4>
+                        <p>Support enforcement of forest laws and international forest reporting obligations.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Challenges -->
+            <section id="challenges">
+                <h2>Challenges & Future Directions</h2>
+                
+                <h3>Current Challenges</h3>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; color: var(--text-light);">
+                    <li><strong>Data Integration:</strong> Combining diverse data sources (satellite, aerial, ground) with different resolutions and temporal frequencies</li>
+                    <li><strong>Computational Demands:</strong> Processing petabytes of satellite data requires significant infrastructure</li>
+                    <li><strong>Ground Truthing:</strong> Validation requires expensive field surveys in remote locations</li>
+                    <li><strong>Spectral Confusion:</strong> Forest type distinction challenges due to similar spectral signatures</li>
+                    <li><strong>Skill Gaps:</strong> Training local staff in GIS and remote sensing analysis</li>
+                </ul>
+
+                <h3>Emerging Trends</h3>
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Cloud Computing</h4>
+                        <p>Google Earth Engine, AWS, and Azure enable processing of global datasets without local infrastructure.</p>
+                    </div>
+                    <div class="card">
+                        <h4>AI & Deep Learning</h4>
+                        <p>Neural networks improve forest classification, detecting subtle patterns in multispectral data.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Drone Deployment</h4>
+                        <p>UAVs provide high-resolution data for small-scale operations and complementary validation.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Open Data Initiatives</h4>
+                        <p>Free access to Sentinel, Landsat, and MODIS data democratizes forest monitoring globally.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conclusion -->
+            <section>
+                <h2>Conclusion</h2>
+                <p>GIS and remote sensing have become indispensable tools in modern forest management. They enable systematic, transparent, and scalable approaches to mapping, monitoring, and managing forests at landscape scales. Whether using open-source QGIS or ArcGIS, the integration of spatial data with analytical tools transforms raw satellite information into actionable intelligence for forest professionals.</p>
+                
+                <p>As technology advances—with improved sensors, faster processing, and more sophisticated algorithms—the role of GIS and remote sensing in forest management will only expand. The challenge now is ensuring that this powerful technology is accessible to all forest managers, regardless of their institutional resources.</p>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        <p>Technical Blog on GIS & Remote Sensing in Forest Management | Built with spatial thinking</p>
+    </footer>
+
+    <script>
+        // Forest Map Visualization
+        function drawForestMap() {
+            const canvas = document.getElementById('forestMap');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = Math.max(canvas.offsetWidth * 0.5, 300);
+
+            // Create a simple forest visualization with simulated satellite data
+            const imageData = ctx.createImageData(canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Generate Perlin-like noise for forest pattern
+            for (let i = 0; i < canvas.height; i++) {
+                for (let j = 0; j < canvas.width; j++) {
+                    const idx = (i * canvas.width + j) * 4;
+                    const noise = Math.sin(i * 0.01) * Math.cos(j * 0.01) + Math.sin(i * 0.005) * Math.cos(j * 0.008);
+                    
+                    if (noise > 0.3) {
+                        // Dense forest (dark green)
+                        data[idx] = 26;     // R
+                        data[idx + 1] = 77; // G
+                        data[idx + 2] = 62; // B
+                    } else if (noise > -0.2) {
+                        // Moderate forest (lighter green)
+                        data[idx] = 76;     // R
+                        data[idx + 1] = 120; // G
+                        data[idx + 2] = 90; // B
+                    } else {
+                        // Open areas (tan)
+                        data[idx] = 180;    // R
+                        data[idx + 1] = 160; // G
+                        data[idx + 2] = 130; // B
+                    }
+                    data[idx + 3] = 255; // Alpha
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+
+            // Add grid overlay to indicate satellite tiles
+            ctx.strokeStyle = 'rgba(0, 168, 150, 0.15)';
+            ctx.lineWidth = 1;
+            const tileSize = canvas.width / 5;
+            for (let i = 0; i <= 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * tileSize, 0);
+                ctx.lineTo(i * tileSize, canvas.height);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i * (canvas.height / 4));
+                ctx.lineTo(canvas.width, i * (canvas.height / 4));
+                ctx.stroke();
+            }
+
+            // Add legend
+            ctx.fillStyle = 'rgba(245, 243, 237, 0.9)';
+            ctx.fillRect(10, 10, 200, 100);
+            ctx.strokeStyle = 'rgba(46, 82, 102, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(10, 10, 200, 100);
+
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = '#2C2C2C';
+            ctx.fillText('Forest Type Classification', 15, 28);
+
+            // Legend items
+            const legendItems = [
+                { color: '#1B4D3E', label: 'Dense Forest' },
+                { color: '#4C7856', label: 'Moderate Forest' },
+                { color: '#B4A082', label: 'Open Areas' }
+            ];
+
+            legendItems.forEach((item, i) => {
+                ctx.fillStyle = item.color;
+                ctx.fillRect(15, 35 + i * 20, 12, 12);
+                ctx.fillStyle = '#666';
+                ctx.font = '11px sans-serif';
+                ctx.fillText(item.label, 32, 44 + i * 20);
+            });
+        }
+
+        // Sampling Design Demo
+        let samplingMode = 'random';
+        let sampledCells = new Set();
+
+        function initSamplingGrid() {
+            const grid = document.getElementById('samplingGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.index = i;
+                cell.onclick = () => toggleCell(i);
+                grid.appendChild(cell);
+            }
+        }
+
+        function setSamplingMode(mode) {
+            samplingMode = mode;
+            sampledCells.clear();
+            
+            if (mode === 'systematic') {
+                // Systematic grid sampling (every 4th cell in a pattern)
+                for (let i = 0; i < 100; i++) {
+                    if ((Math.floor(i / 10) % 2 === 0 && i % 4 === 0) ||
+                        (Math.floor(i / 10) % 2 === 1 && i % 4 === 2)) {
+                        sampledCells.add(i);
+                    }
+                }
+            } else {
+                // Random sampling (~20% of area)
+                for (let i = 0; i < 20; i++) {
+                    sampledCells.add(Math.floor(Math.random() * 100));
+                }
+            }
+            
+            updateGrid();
+        }
+
+        function toggleCell(index) {
+            if (sampledCells.has(index)) {
+                sampledCells.delete(index);
+            } else {
+                sampledCells.add(index);
+            }
+            updateGrid();
+        }
+
+        function clearSampling() {
+            sampledCells.clear();
+            updateGrid();
+        }
+
+        function updateGrid() {
+            document.querySelectorAll('.grid-cell').forEach((cell, i) => {
+                if (sampledCells.has(i)) {
+                    cell.classList.add('sampled');
+                    // Color gradient based on position
+                    const hue = (i % 10) * 36;
+                    cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
+                } else {
+                    cell.classList.remove('sampled');
+                    cell.style.backgroundColor = '';
+                }
+            });
+
+            const coverage = Math.round((sampledCells.size / 100) * 100);
+            document.getElementById('sampleCount').textContent = `${sampledCells.size} plots selected`;
+            document.getElementById('coverage').textContent = `${coverage}%`;
+        }
+
+        // Navigation highlighting
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            drawForestMap();
+            initSamplingGrid();
+        });
+
+        // Redraw on resize
+        window.addEventListener('resize', () => {
+            drawForestMap();
+        });
+    </script>
+</body>
+</html>
